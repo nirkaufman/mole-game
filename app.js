@@ -23,8 +23,8 @@ function randomHoleNumber(maxNumberOfHoles) {
   Get reference to the DOM elements, where the count and the score
   should appear.
  */
-const time = document.getElementById('time');
-const score = document.getElementById('score');
+const timeElement = document.getElementById('time');
+const scoreElement = document.getElementById('score');
 
 // get all the divs that represents 'holes'
 const holesElements = document.getElementsByClassName('hole');
@@ -41,7 +41,7 @@ function whack(evt) {
     game.score += 1;
 
     // "sync" the ui with the game state
-    score.textContent = game.score;
+    scoreElement.textContent = game.score;
 
     // the mole div should have a class named 'hit'
     evt.target.classList.remove('up');
@@ -82,21 +82,62 @@ function moleAppear() {
   }, 1000);
 }
 
+// Reset to default values, set event listeners
+function initGame() {
+  // reset the initial value of time and score from the game state object
+  game.time = 35;
+  game.score = 0;
+  game.gameOver = true;
 
-/*
-   The initial state of the game should be as followed:
-   1. timer should display the initial value from the game state object
-   2. One hole should have the class 'start' - the others should have only 'hole'
-   3. When clicking the hole with the class 'start':
-    - remove the class 'start'. remove the click listener from the 'start' div
-    - add click event listeners to all the holes executing 'whack()'
-   4. update the counter with the current time
-   5. if time is up (0), change the game.gameOver flag to true
- */
+  // sync the UI with the game state
+  timeElement.textContent = game.time;
+  scoreElement.textContent = game.score;
 
-for (let i = 0; i < holesElements.length; i++) {
-  holesElements[i].addEventListener('click', whack)
+  // all divs (holes) should have only 'hole' css class
+  for (let i = 0; i < holesElements.length; i++) {
+    holesElements[i].className = 'hole';
+    holesElements[i].addEventListener('click', whack);
+  }
+
+  // First hole should have the class 'start' and
+  // click event should start the game
+  holesElements[0].classList.add('start');
+  holesElements[0].removeEventListener('click', whack);
+  holesElements[0].addEventListener('click', startGame);
 }
+
+function startGame() {
+  game.gameOver = false;
+
+  // This will make the mole with the start sign disappear
+  holesElements[0].classList.remove('start');
+
+  // change the click listener from startGame to whack
+  holesElements[0].removeEventListener('click', startGame);
+  holesElements[0].addEventListener('click', whack);
+
+  //start to count down and update the UI
+  const timerId = setInterval(() => {
+    // update game state
+    game.time -= 1;
+
+    // sync the UI
+    timeElement.textContent = game.time;
+
+    // if time is up (0), it means GameOver
+    if(game.time === 0) {
+      game.gameOver = true;
+      clearInterval(timerId);
+      initGame();
+    }
+  }, 1000)
+
+   moleAppear();
+}
+
+
+initGame();
+
 
 
 
